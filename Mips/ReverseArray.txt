@@ -1,0 +1,163 @@
+#Josie Isaacson HW4
+
+.data
+exitmessage: .asciiz "\nExit."
+newline: .asciiz "\n"
+explainA: .asciiz "\nArray A Reversed a[0] thru a[9]\n"
+explainB: .asciiz "\nArray B Reversed b[2] thru b[8]\n"
+arrayA: .word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+arrayB: .word 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+
+.text
+
+main:
+	li $v0,1		
+	la $a0, ($sp)		#load sp value
+	syscall			#print
+
+	li $v0, 4
+	la $a0, newline
+	syscall
+
+	#FIRST REVERSE CALL
+
+	li $v0,4
+	la $a0, explainA	#print explaination of what happens to arrayA
+	syscall
+
+	addi $sp, $sp, -8
+
+	la $t1, arrayA
+	la $t3, 36($t1)		
+	sw $t3, 4($sp)		#store address of arrayA[9]
+
+	la $t3, arrayA
+	sw $t3, 0($sp)		#store address of arrayA[0]
+
+
+	#PRINT Original ARRAY
+	addi $t0, $0, 0
+	la $t1, arrayA
+	jal print
+
+
+	jal reverseArray	#call using arrayA[0] and arrayA[9]
+
+	addi $sp, $sp, 8	#clean-up
+
+	#PRINT REVERSE ARRAY
+	addi $t0, $0, 0
+	la $t1, arrayA
+	jal print
+
+
+	li $v0, 4
+	la $a0, newline
+	syscall
+
+
+
+	#SECOND REVERSE CALL
+
+	li $v0,4
+	la $a0, explainB	#print explanation of what happens to arrayB
+	syscall
+
+	addi $sp, $sp, -8
+
+	la $t1, arrayB
+	la $t3, 32($t1)		
+	sw $t3, 4($sp)		#store address of arrayB[8]
+
+	la $t1, arrayB
+	la $t3, 8($t1)	
+	sw $t3, 0($sp)		#store address of arrayB[2]
+
+
+	#li $v0, 4
+	#la $a0, newline
+	#syscall
+
+	#PRINT ORIGINAL ARRAY
+	addi $t0, $0, 0
+	la $t1, arrayB
+	jal print
+
+	jal reverseArray	#call using arrayB[2] and arrayB[8]
+
+	addi $sp, $sp, 8	#clean-up
+
+
+	#PRINT REVERSE ARRAY
+	addi $t0, $0, 0
+	la $t1, arrayB
+	jal print
+
+	li $v0, 4
+	la $a0, newline
+	syscall
+
+	li $v0,1		
+	la $a0, ($sp)		#load sp value
+	syscall			#print
+
+	#Exit
+	li $v0,4
+	la $a0, exitmessage
+	syscall
+	li $v0, 10
+	syscall 
+
+print:
+	li $v0, 1
+	lw $a0, 0($t1)
+	syscall
+
+	li $v0, 4
+	la $a0, newline
+	syscall
+
+
+	addi $t1, $t1, 4
+	addi $t0, $t0, 1
+	beq $t0, 10, return
+	j print
+
+return:
+	jr $ra
+
+
+reverseArray:
+	
+	lw $t2, 4($sp)		#get t (high address)
+
+	lw $t1, 0($sp)		#get s (low address)
+
+	blt $t1, $t2, recurs	#if s < t then do recursion
+	jr $ra
+
+recurs:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)		#save ra to stack
+
+	lw $t4, 0($t2)		#load value at t address
+	lw $t5, 0($t1)		#load value at s address
+
+	sw $t4, 0($t1)
+	sw $t5, 0($t2)
+
+	addi $sp, $sp, -4
+	addi $t2, $t2, -4	#decrement t
+	sw $t2, 0($sp)
+
+	addi $sp, $sp, -4			
+	addi $t1, $t1, 4	#increment s
+	sw $t1, 0($sp)
+	
+	jal reverseArray	#call reverseArray passing in s and t
+	addi $sp, $sp, 8
+	lw $ra, 0($sp)		#load ra
+	addi $sp, $sp, 4	#move sp to next top of stack
+	jr $ra
+
+

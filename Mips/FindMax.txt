@@ -1,0 +1,146 @@
+#Josie Isaacson HW3
+
+.data
+exitmessage: .asciiz "\nExit."
+newline: .asciiz "\n"
+
+.text
+
+
+main:
+	li $v0,1		
+	la $a0, ($sp)		#load sp value
+	syscall			#print
+
+	addi $sp, $sp, -44
+
+	li $t3, 90		#a[9] = 90
+	sw $t3, 44($sp)		#save a[9]
+
+	li $t3, 12		#a[8] = 12
+	sw $t3, 40($sp)		#save a[8]
+
+	li $t3, -4		#a[7] = -4
+	sw $t3, 36($sp)		#save a[7]
+
+	li $t3, 720		#a[6] = 720
+	sw $t3, 32($sp)		#save a[6]
+
+	li $t3, 6		#a[5] = 6
+	sw $t3, 28($sp)		#save a[5]
+
+	li $t3, 7		#a[4] = 7
+	sw $t3, 24($sp)		#save a[4]
+
+	li $t3, 100		#a[3] = 100
+	sw $t3, 20($sp)		#save a[3]
+
+	li $t3, 32		#a[2] = 32
+	sw $t3, 16($sp)		#save a[2]
+
+	li $t3, 2		#a[1] = 2
+	sw $t3, 12($sp)		#save a[2]
+
+	li $t3, 721		#a[0] = 721
+	sw $t3, 8($sp)		#save a[0]
+
+	li $t3, 10
+	sw $t3, 4($sp)		#save array size to stack
+
+	la $t3, 8($sp)		
+	sw $t3, 0($sp)		#store address of first element of array
+
+
+	jal findMax
+
+	addi $sp, $sp, 44	#clean-up
+
+	move $a0, $v0		#print num on return from findMax
+	li $v0, 1
+	syscall
+	
+	li $v0, 4
+	la $a0, newline
+	syscall
+
+	li $v0,1		
+	la $a0, ($sp)		#load sp value
+	syscall			#print
+
+	#Exit
+	li $v0,4
+	la $a0, exitmessage
+	syscall
+	li $v0, 10
+	syscall 
+
+
+return:
+	jr $ra
+
+
+findMax:
+
+	lw $t2, 4($sp)		#load array size into t2
+	lw $t1, 0($sp)		#load array address into t1
+
+	addi $sp, $sp, -4
+	sw $ra, 0($sp) 		#save ra to stack
+	addi $sp, $sp, -4
+	sw $fp, 0($sp)
+	move $fp, $sp		#save frame pointer position
+	
+	addi $t3, $0, 0		#load max start value of 0 into t3
+	sw $t3, -4($fp)		#save max local variable to stack —> is at -4($fp)
+	addi $t0, $0, 0		#initialize loop counter to 0
+
+	move $sp, $t1		#move sp to beginning of array
+
+	jal forLoop
+
+	move $sp, $fp		#move sp to fp
+	addi $sp, $sp, -4	
+	sw $t3, 0($sp)		#store max onto stack
+
+	li $v0,4		#print newline before printNum
+	la $a0, newline
+	syscall
+
+	jal printNum
+
+	li $v0,4		#print newline after printNum
+	la $a0, newline
+	syscall
+
+	lw $v0, 0($sp)		#load max into v0 as return value
+	addi $sp, $sp, 4	#move to fp
+	addi $sp, $sp, 4	#move to ra
+	lw $ra, 0($sp)		#load original ra from main call
+	addi $sp, $sp, 4	#move to top of callers stack
+
+	jr $ra			#return to main
+	
+	
+
+forLoop:
+
+	bge $t0, $t2, return 	#return if loop counter >= size of array
+	lw $t4, 0($sp)		#load a[i]
+	addi $sp, $sp, 4	#move up in array
+	addi $t0, $t0, 1	#increment loop counter
+	blt $t3, $t4, setMax	#if max < a[i], then go to setMax
+	j forLoop	
+
+
+setMax:
+	move $t3, $t4		#store a[i] as max
+	j forLoop		#return to forLoop
+
+
+printNum:
+	lw $a0, -4($fp)		#load max from stack
+	li $v0, 1		#system call code for print_int
+	syscall			#print
+	jr $ra			
+
+

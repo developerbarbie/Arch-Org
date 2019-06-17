@@ -1,0 +1,66 @@
+#Josie Isaacson
+#QTSpim Settings: Settings -> Uncheck Exception Handler Box and Check Mapped I/O Box
+
+.data
+ch: .space 4
+
+.text
+
+main:
+	#setting enable bit to 1
+	mfc0 $a0, $12
+	ori $a0, $a0, 0x0000001
+	mtc0 $a0, $12
+
+	#enable keyboard interrupt
+	lui $a0, 0xffff
+	addi $t0, $0, 2
+	sw $t0, 0($a0)
+
+	#set ch='a'
+	la $t1, ch
+	li $t2, 'a'
+	sw $t2, 0($t1)
+
+	#while loop
+	whileLoop:
+		#print ch
+		li $v0,11
+		la $a0, ch
+		lw $a0, 0($a0)
+		syscall
+
+		#for loop for 90000
+		addi $t3, $0, 0		#set i=0
+		forLoop:
+			beq $t3, 90000, quitForLoop
+			addi $t3, $t3, 1
+			j forLoop
+
+		#return to while loop
+		quitForLoop:
+			j whileLoop
+
+
+
+.kdata
+
+
+.ktext 0x80000180
+la $k1, 0xffff0004
+#read keyboard
+lw $k0, 0($k1)
+la $k1, ch		#load address of ch
+sb $k0, 0($k1)		#store byte into k1
+mtc0 $0, $13		#zero out so ready for next interrupt
+mfc0 $a0, $12		#setting enable bit to 1
+ori $a0, $a0, 0x0000001
+mtc0 $a0, $12
+eret
+
+
+
+
+
+
+
